@@ -135,13 +135,6 @@ double const kMaxLocationLifeTimeInSeconds = 5.0;
   [locationManager startUpdatingLocation];
 }
 
-- (void)stopListening {
-  [[self getLocationManager] stopUpdatingLocation];
-  self.isListeningForPositionUpdates = NO;
-  self.errorHandler = nil;
-  self.listenerResultHandler = nil;
-}
-
 - (void)startUpdatingSignificantChanges:(CLLocationAccuracy)desiredAccuracy
                pauseLocationUpdatesAutomatically:(BOOL)pauseLocationUpdatesAutomatically
                                     activityType:(CLActivityType)activityType
@@ -180,7 +173,10 @@ double const kMaxLocationLifeTimeInSeconds = 5.0;
 
 - (void)locationManager:(CLLocationManager *)manager
      didUpdateLocations:(NSArray<CLLocation *> *)locations {
-  if (!self.listenerResultHandler && !self.currentLocationResultHandler) return;
+  if (
+    !self.listenerResultHandler && 
+    !self.currentLocationResultHandler && 
+    !self.listenerSignificantUpdatesResultHandler) return;
 
   CLLocation *mostRecentLocation = [locations lastObject];
   NSTimeInterval ageInSeconds = -[mostRecentLocation.timestamp timeIntervalSinceNow];

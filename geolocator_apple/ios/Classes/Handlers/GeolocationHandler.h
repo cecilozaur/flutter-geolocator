@@ -30,6 +30,13 @@ typedef void (^GeolocatorResult)(CLLocation *_Nullable location);
                             resultHandler:(GeolocatorResult _Nonnull)resultHandler
                              errorHandler:(GeolocatorError _Nonnull)errorHandler;
 
+- (void)startListeningForSignificantChanges:(CLLocationAccuracy)desiredAccuracy
+        pauseLocationUpdatesAutomatically:(BOOL)pauseLocationUpdatesAutomatically
+          showBackgroundLocationIndicator:(BOOL)showBackgroundLocationIndicator
+                             activityType:(CLActivityType)activityType
+                            resultHandler:(GeolocatorResult _Nonnull )resultHandler
+                             errorHandler:(GeolocatorError _Nonnull)errorHandler;
+
 - (void)stopListening;
 @end
 
