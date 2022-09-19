@@ -51,19 +51,35 @@
   CLActivityType activityType = [ActivityTypeMapper toCLActivityType:(NSNumber *)arguments[@"activityType"]];
 
   NSNumber* showBackgroundLocationIndicator = arguments[@"showBackgroundLocationIndicator"];
-	      
-  [[weakSelf geolocationHandler] startListeningWithDesiredAccuracy:accuracy
+  NSNumber* useSignificantLocationChanges = arguments[@"useSignificantLocationChanges"];
+
+  if (useSignificantLocationChanges && [useSignificantLocationChanges boolValue]) {
+    [[weakSelf geolocationHandler] startListeningForSignificantChanges:accuracy
+                                 pauseLocationUpdatesAutomatically:pauseLocationUpdatesAutomatically && [pauseLocationUpdatesAutomatically boolValue]
+                                   showBackgroundLocationIndicator:showBackgroundLocationIndicator && [showBackgroundLocationIndicator boolValue]
+                                                      activityType:activityType
+                                                     resultHandler:^(CLLocation *location) {
+      [weakSelf onLocationDidChange: location];
+    }
+                                                      errorHandler:^(NSString *errorCode, NSString *errorDescription){
+      [weakSelf onLocationFailureWithErrorCode:errorCode
+                            errorDescription:errorDescription];
+    }];
+  } else {
+    [[weakSelf geolocationHandler] startListeningWithDesiredAccuracy:accuracy
                                                     distanceFilter:distanceFilter
                                  pauseLocationUpdatesAutomatically:pauseLocationUpdatesAutomatically && [pauseLocationUpdatesAutomatically boolValue]
                                    showBackgroundLocationIndicator:showBackgroundLocationIndicator && [showBackgroundLocationIndicator boolValue]
                                                       activityType:activityType
                                                      resultHandler:^(CLLocation *location) {
-    [weakSelf onLocationDidChange: location];
-  }
+      [weakSelf onLocationDidChange: location];
+    }
                                                       errorHandler:^(NSString *errorCode, NSString *errorDescription){
-    [weakSelf onLocationFailureWithErrorCode:errorCode
+      [weakSelf onLocationFailureWithErrorCode:errorCode
                             errorDescription:errorDescription];
-  }];
+    }];
+  }
+  
   return nil;
 }
 

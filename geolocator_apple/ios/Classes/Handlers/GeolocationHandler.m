@@ -14,6 +14,7 @@ double const kMaxLocationLifeTimeInSeconds = 5.0;
 @interface GeolocationHandler() <CLLocationManagerDelegate>
 
 @property(assign, nonatomic) bool isListeningForPositionUpdates;
+@property(assign, nonatomic) bool isListeningForSignificantChanges;
 
 @property(strong, nonatomic, nonnull) CLLocationManager *locationManager;
 
@@ -21,6 +22,7 @@ double const kMaxLocationLifeTimeInSeconds = 5.0;
 
 @property(strong, nonatomic) GeolocatorResult currentLocationResultHandler;
 @property(strong, nonatomic) GeolocatorResult listenerResultHandler;
+@property(strong, nonatomic) GeolocatorResult listenerSignificantUpdatesResultHandler;
 
 @end
 
@@ -34,6 +36,7 @@ double const kMaxLocationLifeTimeInSeconds = 5.0;
   }
     
   self.isListeningForPositionUpdates = NO;
+  self.isListeningForSignificantChanges = NO;
   return self;
 }
 
@@ -87,6 +90,23 @@ double const kMaxLocationLifeTimeInSeconds = 5.0;
                  showBackgroundLocationIndicator:showBackgroundLocationIndicator];
 }
 
+- (void)startListeningForSignificantChanges:(CLLocationAccuracy)desiredAccuracy
+        pauseLocationUpdatesAutomatically:(BOOL)pauseLocationUpdatesAutomatically
+          showBackgroundLocationIndicator:(BOOL)showBackgroundLocationIndicator
+                             activityType:(CLActivityType)activityType
+                            resultHandler:(GeolocatorResult _Nonnull )resultHandler
+                             errorHandler:(GeolocatorError _Nonnull)errorHandler {
+    
+  self.errorHandler = errorHandler;
+  self.listenerSignificantUpdatesResultHandler = resultHandler;
+  self.isListeningForSignificantChanges = YES;
+    
+  [self startUpdatingSignificantChanges:desiredAccuracy
+               pauseLocationUpdatesAutomatically:pauseLocationUpdatesAutomatically
+                                    activityType:activityType
+                 showBackgroundLocationIndicator:showBackgroundLocationIndicator];
+}
+
 - (void)startUpdatingLocationWithDesiredAccuracy:(CLLocationAccuracy)desiredAccuracy
                                   distanceFilter:(CLLocationDistance)distanceFilter
                pauseLocationUpdatesAutomatically:(BOOL)pauseLocationUpdatesAutomatically
@@ -122,6 +142,42 @@ double const kMaxLocationLifeTimeInSeconds = 5.0;
   self.listenerResultHandler = nil;
 }
 
+- (void)startUpdatingSignificantChanges:(CLLocationAccuracy)desiredAccuracy
+               pauseLocationUpdatesAutomatically:(BOOL)pauseLocationUpdatesAutomatically
+                                    activityType:(CLActivityType)activityType
+                 showBackgroundLocationIndicator:(BOOL)showBackgroundLocationIndicator
+                            {
+  CLLocationManager *locationManager = [self getLocationManager];
+  locationManager.desiredAccuracy = desiredAccuracy;
+  if (@available(iOS 6.0, macOS 10.15, *)) {
+    locationManager.activityType = activityType;
+    locationManager.pausesLocationUpdatesAutomatically = pauseLocationUpdatesAutomatically;
+  }
+  
+#if TARGET_OS_IOS
+  if (@available(iOS 9.0, macOS 11.0, *)) {
+    locationManager.allowsBackgroundLocationUpdates = [GeolocationHandler shouldEnableBackgroundLocationUpdates];
+  }
+  if (@available(iOS 11.0, macOS 11.0, *)) {
+    locationManager.showsBackgroundLocationIndicator = showBackgroundLocationIndicator;
+  }
+#endif
+  
+  [locationManager startMonitoringSignificantLocationChanges];
+}
+
+- (void)stopListening {
+  [[self getLocationManager] stopUpdatingLocation];
+  self.isListeningForPositionUpdates = NO;
+  self.errorHandler = nil;
+  self.listenerResultHandler = nil;
+  if (self.isListeningForSignificantChanges) {
+    [[self getLocationManager] stopMonitoringSignificantLocationChanges];
+    self.isListeningForSignificantChanges = NO;
+    self.listenerSignificantUpdatesResultHandler = nil;
+  }
+}
+
 - (void)locationManager:(CLLocationManager *)manager
      didUpdateLocations:(NSArray<CLLocation *> *)locations {
   if (!self.listenerResultHandler && !self.currentLocationResultHandler) return;
@@ -141,10 +197,13 @@ double const kMaxLocationLifeTimeInSeconds = 5.0;
       if (self.listenerResultHandler != nil) {
           self.listenerResultHandler(mostRecentLocation);
       }
+      if (self.listenerSignificantUpdatesResultHandler != nil) {
+        self.listenerSignificantUpdatesResultHandler(mostRecentLocation);
+      }
   }
 
   self.currentLocationResultHandler = nil;
-  if (!self.isListeningForPositionUpdates) {
+  if (!self.isListeningForPositionUpdates && !self.isListeningForSignificantChanges) {
     [self stopListening];
   }
 }
@@ -164,7 +223,7 @@ double const kMaxLocationLifeTimeInSeconds = 5.0;
   }
   
   self.currentLocationResultHandler = nil;
-  if (!self.isListeningForPositionUpdates) {
+  if (!self.isListeningForPositionUpdates && !self.isListeningForSignificantChanges) {
     [self stopListening];
   }
 }

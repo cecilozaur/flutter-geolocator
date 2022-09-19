@@ -17,6 +17,7 @@ class AppleSettings extends LocationSettings {
     int distanceFilter = 0,
     Duration? timeLimit,
     this.showBackgroundLocationIndicator = false,
+    this.useSignificantLocationChanges = false,
   }) : super(
           accuracy: accuracy,
           distanceFilter: distanceFilter,
@@ -41,6 +42,16 @@ class AppleSettings extends LocationSettings {
   /// have granted "always" permissions for location retrieval.
   final bool showBackgroundLocationIndicator;
 
+  /// Flag to ask the Apple OS to track significant location changes (iOS only),
+  /// using this listener will wake the app from sleep.
+  ///
+  /// Apps can expect a notification as soon as the device moves 500 meters
+  /// or more from its previous notification.
+  ///
+  /// For this setting to work and for the location to be retrieved the user must
+  /// have granted "always" permissions for location retrieval.
+  final bool useSignificantLocationChanges;
+
   /// Returns a JSON representation of this class.
   @override
   Map<String, dynamic> toJson() {
@@ -49,6 +60,7 @@ class AppleSettings extends LocationSettings {
         'pauseLocationUpdatesAutomatically': pauseLocationUpdatesAutomatically,
         'this.activityType': activityType.index,
         'showBackgroundLocationIndicator': showBackgroundLocationIndicator,
+        'useSignificantLocationChanges': useSignificantLocationChanges,
       });
   }
 }

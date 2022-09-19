@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
   s.homepage         = 'http://github.com/baseflow/flutter-geolocator'
   s.license          = { :type => 'MIT', :file => '../LICENSE' }
   s.author           = { 'Baseflow' => 'hello@baseflow.com' }
-  s.source           = { :http => 'https://github.com/baseflow/flutter-geolocator/tree/master/' }
+  s.source           = { :http => 'https://github.com/cecilozaur/flutter-geolocator/tree/feature/add_significant_location_changes_listener' }
   s.source_files = 'Classes/**/*.{h,m}'
   s.public_header_files = 'Classes/**/*.h'
   s.module_map = 'Classes/GeolocatorPlugin.modulemap'
